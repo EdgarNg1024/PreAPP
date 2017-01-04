@@ -48,6 +48,14 @@ public class MyWindowManager {
      */
     private static ActivityManager mActivityManager;
 
+    private static int preAPP_now = -1; //当前的上一个APP
+    private static int preAPP_cache = -1;//之前的上一个APP
+    private static int APP_now = -1;//当前的APP
+    private static int APP_cache = -1;//之前的APP
+    private static int home = -1;//首页
+
+//    private static boolean isReturned = false;//是否已经点击返回
+
     /**
      * 创建一个小悬浮窗。初始位置为屏幕的右部中间位置。
      *
@@ -83,14 +91,13 @@ public class MyWindowManager {
      * @param context
      */
     public static void returnToPreAPP(Context context) {
-        if (preAPPInfo != null){
-            Intent intent = (Intent)preAPPInfo.get("tag");
+        if (preAPPInfo != null) {
+            Intent intent = (Intent) preAPPInfo.get("tag");
             if (intent != null) {
                 intent.addFlags(Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY);
                 try {
                     context.startActivity(intent);
-                }
-                catch (ActivityNotFoundException e) {
+                } catch (ActivityNotFoundException e) {
                     Log.w("Recent", "Unable to launch recent task", e);
                 }
             }
@@ -109,14 +116,21 @@ public class MyWindowManager {
             windowManager.removeView(smallWindow);
             preAPPInfo = null;
             smallWindow = null;
+            preAPP_cache = preAPP_now;
+            APP_cache = APP_now;
         }
     }
+
 
     /**
      * 是否从A APP 跳转到B APP
      */
     public static boolean isA2B() {
-        return true;
+        if (preAPP_now != preAPP_cache && preAPP_now != home && preAPP_now != -1 ) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     /**
@@ -140,7 +154,8 @@ public class MyWindowManager {
             if (showtxt.length() == 0) {
                 removeSmallWindow(context);
             } else {
-                percentView.setText("«返回\"" + showtxt + "\"");
+                percentView.setText("« 返回\"" + showtxt + "\"");
+                APP_cache = APP_now;
             }
         }
     }
@@ -153,6 +168,7 @@ public class MyWindowManager {
     public static boolean isWindowShowing() {
         return smallWindow != null;
     }
+
 
     /**
      * 如果WindowManager还未创建，则创建一个新的WindowManager返回。否则返回当前已创建的WindowManager。
@@ -190,6 +206,8 @@ public class MyWindowManager {
         List<HashMap<String, Object>> appInfos = reloadButtons(context, 2);
         if (appInfos != null && appInfos.size() > 1) {
             preAPPInfo = appInfos.get(1);
+            preAPP_now = (int) preAPPInfo.get("uid");
+            APP_now = (int) appInfos.get(0).get("uid");
             return (String) appInfos.get(1).get("title");
         } else {
             return "";
@@ -263,12 +281,14 @@ public class MyWindowManager {
                 if (resolveInfo != null) {
                     final ActivityInfo activityInfo = resolveInfo.activityInfo;
                     final String title = activityInfo.loadLabel(pm).toString();
+                    final int uid = activityInfo.applicationInfo.uid;
                     Drawable icon = activityInfo.loadIcon(pm);
 
                     if (title != null && title.length() > 0 && icon != null) {
                         singleAppInfo.put("title", title);
                         singleAppInfo.put("icon", icon);
                         singleAppInfo.put("tag", intent);
+                        singleAppInfo.put("uid", uid);
                         singleAppInfo.put("packageName", activityInfo.packageName);
                         appInfos.add(singleAppInfo);
                     }
@@ -280,5 +300,57 @@ public class MyWindowManager {
             Log.d("mmm", e.getMessage());
             return null;
         }
+    }
+
+    /**
+     * 判断是否离开B
+     *
+     * @return true则已经离开B, false则还在B那溜达
+     */
+    public static boolean isLeaveB() {
+        return preAPP_now == APP_cache || preAPP_now == -1;
+    }
+
+    /**
+     * 给preAPP_now,app_now赋值
+     *
+     * @param context
+     */
+    public static void refresh(Context context) {
+        //判断当前界面以及上一个界面是不是桌面
+        ActivityManager mActivityManager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+        List<ActivityManager.RunningTaskInfo> rti = mActivityManager.getRunningTasks(10);
+        List<String> gethomes = getHomes(context);
+        if (gethomes.contains(rti.get(0).topActivity.getPackageName())) {
+            //当前界面是桌面
+            APP_now = -1;
+        } else if (gethomes.contains(rti.get(1).topActivity.getPackageName())) {
+            //上一个界面是桌面
+            preAPP_now = -1;
+        } else {
+            getPreAPPName(context);
+//            updatePreAPPName(context);
+        }
+
+
+    }
+
+
+    /**
+     * 获得属于桌面的应用的应用包名称
+     *
+     * @return 返回包含所有包名的字符串列表
+     */
+    private static List<String> getHomes(Context context) {
+        List<String> names = new ArrayList<String>();
+        PackageManager packageManager = context.getPackageManager();
+        Intent intent = new Intent(Intent.ACTION_MAIN);
+        intent.addCategory(Intent.CATEGORY_HOME);
+        List<ResolveInfo> resolveInfo = packageManager.queryIntentActivities(intent,
+                PackageManager.MATCH_DEFAULT_ONLY);
+        for (ResolveInfo ri : resolveInfo) {
+            names.add(ri.activityInfo.packageName);
+        }
+        return names;
     }
 }

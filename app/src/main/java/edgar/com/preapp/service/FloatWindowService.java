@@ -1,16 +1,10 @@
 package edgar.com.preapp.service;
 
-import android.app.ActivityManager;
 import android.app.Service;
-import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
 import android.os.Handler;
 import android.os.IBinder;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -40,7 +34,7 @@ public class FloatWindowService extends Service {
         // 开启定时器，每隔0.5秒刷新一次
         if (timer == null) {
             timer = new Timer();
-            timer.scheduleAtFixedRate(new RefreshTask(), 0, 500);
+            timer.scheduleAtFixedRate(new RefreshTask(), 0, 2000);
         }
         return super.onStartCommand(intent, flags, startId);
     }
@@ -54,21 +48,15 @@ public class FloatWindowService extends Service {
     }
 
     class RefreshTask extends TimerTask {
-
         @Override
         public void run() {
-            //由A跳到B
-            if (MyWindowManager.isA2B()) {
-                //没有悬浮窗,则创建
-                if (!MyWindowManager.isWindowShowing()) {
-                    handler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            MyWindowManager.createSmallWindow(getApplicationContext());
-                        }
-                    });
-                } else {
-                    //有悬浮窗,则更新
+            MyWindowManager.refresh(getApplication());
+            if (MyWindowManager.isWindowShowing()) {
+                //打开状态下,判断是否离开B
+                if (MyWindowManager.isLeaveB()) {
+                    //离开B则移除浮窗
+                    MyWindowManager.removeSmallWindow(getApplicationContext());
+                }else if (MyWindowManager.isA2B()){
                     handler.post(new Runnable() {
                         @Override
                         public void run() {
@@ -76,38 +64,21 @@ public class FloatWindowService extends Service {
                         }
                     });
                 }
-            } else if (MyWindowManager.isBReturnToA() && MyWindowManager.isWindowShowing()) {
-                //B返回到A,且悬浮窗正在显示,则去掉悬浮窗
-                MyWindowManager.removeSmallWindow(getApplicationContext());
+            } else {
+                //关闭状态下,判断是否A跳到B
+                if (MyWindowManager.isA2B()) {
+                    //没有悬浮窗,则创建
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            MyWindowManager.createSmallWindow(getApplicationContext());
+                        }
+                    });
+                }
             }
         }
 
     }
 
-    /**
-     * 判断当前界面是否是桌面
-     */
-    private boolean isHome() {
-        ActivityManager mActivityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
-        List<ActivityManager.RunningTaskInfo> rti = mActivityManager.getRunningTasks(10);
-        return getHomes().contains(rti.get(0).topActivity.getPackageName());
-    }
 
-    /**
-     * 获得属于桌面的应用的应用包名称
-     *
-     * @return 返回包含所有包名的字符串列表
-     */
-    private List<String> getHomes() {
-        List<String> names = new ArrayList<String>();
-        PackageManager packageManager = this.getPackageManager();
-        Intent intent = new Intent(Intent.ACTION_MAIN);
-        intent.addCategory(Intent.CATEGORY_HOME);
-        List<ResolveInfo> resolveInfo = packageManager.queryIntentActivities(intent,
-                PackageManager.MATCH_DEFAULT_ONLY);
-        for (ResolveInfo ri : resolveInfo) {
-            names.add(ri.activityInfo.packageName);
-        }
-        return names;
-    }
 }
