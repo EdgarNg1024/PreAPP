@@ -1,5 +1,3 @@
-# PreAPP
-
 # Introduction
 Return to the previous application
 返回上一个APP，类似iOS左上角的返回上一个APP.
