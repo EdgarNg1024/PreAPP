@@ -126,7 +126,7 @@ public class MyWindowManager {
      * 是否从A APP 跳转到B APP
      */
     public static boolean isA2B() {
-        if (preAPP_now != preAPP_cache && preAPP_now != home && preAPP_now != -1 ) {
+        if (preAPP_now != APP_cache && preAPP_now != home && preAPP_now != -1 ) {
             return true;
         } else {
             return false;
@@ -200,7 +200,7 @@ public class MyWindowManager {
      * 获取上一个APP的名字,并返回
      *
      * @param context 可传入应用程序上下文。
-     * @return 已使用内存的百分比，以字符串形式返回。
+     * @return 应用名。
      */
     public static String getPreAPPName(Context context) {
         List<HashMap<String, Object>> appInfos = reloadButtons(context, 2);
@@ -212,14 +212,6 @@ public class MyWindowManager {
         } else {
             return "";
         }
-
-/*        ActivityManager mActivityManager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
-        List<ActivityManager.RunningTaskInfo> rti = mActivityManager.getRunningTasks(2);
-        if (rti != null && rti.size() > 1) {
-            return rti.get(1).topActivity.getPackageName();
-        } else {
-            return "";
-        }*/
     }
 
 
@@ -308,7 +300,7 @@ public class MyWindowManager {
      * @return true则已经离开B, false则还在B那溜达
      */
     public static boolean isLeaveB() {
-        return preAPP_now == APP_cache || preAPP_now == -1;
+        return preAPP_now == APP_cache || preAPP_now == -1 || APP_now ==-1;
     }
 
     /**
@@ -329,7 +321,6 @@ public class MyWindowManager {
             preAPP_now = -1;
         } else {
             getPreAPPName(context);
-//            updatePreAPPName(context);
         }
 
 

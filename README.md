@@ -3,10 +3,12 @@ Return to the previous application
 返回上一个APP，类似iOS左上角的返回上一个APP.
 
 #Future
+* service保活
+* 兼容5.0以上
+* 尽量少地涉及到悬浮窗权限
 * 高斯模糊
 * 处于状态栏
-* 保活
-* 优化显示机制(首页不显示、点击后消失)
+
 
 #Contributing
 
