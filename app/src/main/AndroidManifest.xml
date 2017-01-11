@@ -19,7 +19,8 @@
             </intent-filter>
         </activity>
         <activity android:name=".ui.APPList"/>
-        <service android:name=".service.FloatWindowService"/>
+        <service android:name=".service.FloatWindowService"
+            android:process="edgar.com.preapp.remote"/>
     </application>
 
 </manifest>

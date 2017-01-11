@@ -36,7 +36,8 @@ public class FloatWindowService extends Service {
             timer = new Timer();
             timer.scheduleAtFixedRate(new RefreshTask(), 0, 2000);
         }
-        return super.onStartCommand(intent, flags, startId);
+//        return super.onStartCommand(intent, flags, startId);
+        return START_STICKY;
     }
 
     @Override
@@ -51,12 +52,12 @@ public class FloatWindowService extends Service {
         @Override
         public void run() {
             MyWindowManager.refresh(getApplication());
-            if (MyWindowManager.isWindowShowing()) {
+            if (MyWindowManager.isWindowShowing() && false) {
                 //打开状态下,判断是否离开B
                 if (MyWindowManager.isLeaveB()) {
                     //离开B则移除浮窗
                     MyWindowManager.removeSmallWindow(getApplicationContext());
-                }else if (MyWindowManager.isA2B()){
+                } else if (MyWindowManager.isA2B()) {
                     handler.post(new Runnable() {
                         @Override
                         public void run() {
@@ -66,7 +67,7 @@ public class FloatWindowService extends Service {
                 }
             } else {
                 //关闭状态下,判断是否A跳到B
-                if (MyWindowManager.isA2B()) {
+                if (MyWindowManager.isA2B() || true) {
                     //没有悬浮窗,则创建
                     handler.post(new Runnable() {
                         @Override
