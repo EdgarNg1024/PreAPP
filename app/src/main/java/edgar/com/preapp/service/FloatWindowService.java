@@ -52,7 +52,7 @@ public class FloatWindowService extends Service {
         @Override
         public void run() {
             MyWindowManager.refresh(getApplication());
-            if (MyWindowManager.isWindowShowing() && false) {
+            if (MyWindowManager.isWindowShowing()) {
                 //打开状态下,判断是否离开B
                 if (MyWindowManager.isLeaveB()) {
                     //离开B则移除浮窗
@@ -67,7 +67,7 @@ public class FloatWindowService extends Service {
                 }
             } else {
                 //关闭状态下,判断是否A跳到B
-                if (MyWindowManager.isA2B() || true) {
+                if (MyWindowManager.isA2B()) {
                     //没有悬浮窗,则创建
                     handler.post(new Runnable() {
                         @Override
